@@ -34,7 +34,7 @@ export default function Login({ onForgotPassword, onCreateAccount, onLogin }: Lo
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       const user = response.data.user;
-      onLogin(user?.role === 'admin' ? 'admin' : 'user', user?.name || formData.email);
+      onLogin(user?.perfil === 'ADMIN' ? 'admin' : 'user', user?.nome || formData.email);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao fazer login');
     } finally {

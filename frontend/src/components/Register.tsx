@@ -1,4 +1,6 @@
 ﻿import { useState } from 'react';
+import { authAPI } from '../api';
+import { UserRole } from './Dashboard';
 import './Register.css';
 
 const CITIES: Record<string, string[]> = {
@@ -22,9 +24,10 @@ const Icon = ({ children }: { children: React.ReactNode }) => (
 
 interface RegisterProps {
   onBackToLogin: () => void;
+  onRegistered: (role: UserRole, name: string) => void;
 }
 
-export default function Register({ onBackToLogin }: RegisterProps) {
+export default function Register({ onBackToLogin, onRegistered }: RegisterProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +37,7 @@ export default function Register({ onBackToLogin }: RegisterProps) {
   const [city, setCity] = useState('');
   const [region, setRegion] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const regions = city ? CITIES[city] : [];
 
@@ -42,13 +46,33 @@ export default function Register({ onBackToLogin }: RegisterProps) {
     setRegion('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError('As senhas não coincidem.');
       return;
     }
     setError('');
+    setLoading(true);
+
+    try {
+      const response = await authAPI.register({
+        nome: name,
+        email,
+        password,
+        confirmPassword,
+        cidade: city,
+        regiao: region,
+      });
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const user = response.data.user;
+      onRegistered(user?.perfil === 'ADMIN' ? 'admin' : 'user', user?.nome || name);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Erro ao criar conta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -150,7 +174,7 @@ export default function Register({ onBackToLogin }: RegisterProps) {
               </div>
             </div>
 
-            <button type="submit" className="register-submit">Criar conta</button>
+            <button type="submit" className="register-submit" disabled={loading}>{loading ? 'Criando conta...' : 'Criar conta'}</button>
           </form>
 
           <button type="button" className="register-link" onClick={onBackToLogin}>

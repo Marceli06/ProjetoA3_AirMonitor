@@ -15,7 +15,12 @@ const App: React.FC = () => {
       <Dashboard
         role={session.role}
         userName={session.name}
-        onLogout={() => setCurrentPage('login')}
+        onLogout={() => {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          setSession({ role: 'user', name: '' });
+          setCurrentPage('login');
+        }}
       />
     );
   }
@@ -25,7 +30,15 @@ const App: React.FC = () => {
   }
 
   if (currentPage === 'register') {
-    return <Register onBackToLogin={() => setCurrentPage('login')} />;
+    return (
+      <Register
+        onBackToLogin={() => setCurrentPage('login')}
+        onRegistered={(role, name) => {
+          setSession({ role, name });
+          setCurrentPage('dashboard');
+        }}
+      />
+    );
   }
 
   return (
